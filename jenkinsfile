@@ -1,34 +1,89 @@
 pipeline {
+
     agent any
 
     environment {
-        DOCKER_USER = "surya8442"
-        IMAGE_NAME = "agriculture"
-        IMAGE_TAG = "latest"
+
+        // Git
+        GIT_REPO = 'https://github.com/Surya8442/Dreamhouse.git'
+        GIT_BRANCH = 'main'
+
+        // Docker
+        DOCKERHUB_USER = 'surya8442'
+        IMAGE_NAME = 'dreamhouse'
+        IMAGE_TAG = "v${BUILD_NUMBER}"
+        DOCKER_CREDS = 'Docker_cred'
+
+        // AWS
+        AWS_REGION = 'ap-south-1'
+        EKS_CLUSTER = 'mycluster'
+
+        // Kubernetes
+        K8S_DEPLOYMENT = 'deployment'
+        K8S_CONTAINER = 'mycontainer'
+
+        // Email
+        NOTIFY_EMAIL = 'suryakandipalli@gmail.com'
+
+        FAILED_STAGE = ''
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Surya8442/agriculture.git'
+                git branch: "${GIT_BRANCH}", url: "${GIT_REPO}"
+            }
+            post {
+                failure {
+                    script { env.FAILED_STAGE = "Checkout" }
+                }
             }
         }
 
-        stage('Build Image') {
+        stage('Build  Image') {
             steps {
-                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                sh '''
+                docker build -t $DOCKERHUB_USER/$IMAGE_NAME:$IMAGE_TAG .
+                '''
+            }
+            post {
+                failure {
+                    script { env.FAILED_STAGE = "Build Docker Image" }
+                }
             }
         }
 
-        stage('Push to DockerHub') {
+        stage('Dockerhub  Push') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'Docker_cred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                    sh """
-                    echo "$PASS" | docker login -u "$USER" --password-stdin
-                    docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}
-                    docker push ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}
-                    """
+                withCredentials([usernamePassword(
+                    credentialsId: "${DOCKER_CREDS}",
+                    usernameVariable: 'USER',
+                    passwordVariable: 'PASS'
+                )]) {
+
+                    sh '''
+                    echo $PASS | docker login -u $USER --password-stdin
+                    docker push $DOCKERHUB_USER/$IMAGE_NAME:$IMAGE_TAG
+                    '''
+                }
+            }
+            post {
+                failure {
+                    script { env.FAILED_STAGE = "Docker Push" }
+                }
+            }
+        }
+
+        stage('Configure AWS EKS') {
+            steps {
+                sh '''
+                aws eks --region $AWS_REGION update-kubeconfig --name $EKS_CLUSTER
+                '''
+            }
+            post {
+                failure {
+                    script { env.FAILED_STAGE = "Configure EKS" }
                 }
             }
         }
@@ -36,11 +91,73 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh """
-                export KUBECONFIG=/var/lib/jenkins/.kube/config
-                kubectl apply -f deployment.yml
+                kubectl set image deployment/$K8S_DEPLOYMENT \
+                $K8S_CONTAINER=$DOCKERHUB_USER/$IMAGE_NAME:$IMAGE_TAG
                 """
+            }
+            post {
+                failure {
+                    script { env.FAILED_STAGE = "Deploy to Kubernetes" }
+                }
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                sh '''
+                kubectl rollout status deployment/$K8S_DEPLOYMENT --timeout=120s
+                '''
+            }
+            post {
+                failure {
+                    script { env.FAILED_STAGE = "Verify Deployment" }
+                }
             }
         }
     }
-}
 
+    post {
+
+        success {
+            emailext(
+                subject: "🚀 SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+                Deployment Successful
+
+                Job: ${env.JOB_NAME}
+                Build: ${env.BUILD_NUMBER}
+
+                Docker Image:
+                ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}
+
+                Cluster:
+                ${EKS_CLUSTER}
+
+                Build URL:
+                ${env.BUILD_URL}
+                """,
+                to: "${NOTIFY_EMAIL}"
+            )
+        }
+
+        failure {
+            emailext(
+                subject: "❌ FAILED at ${env.FAILED_STAGE}",
+                body: """
+                Pipeline Failed
+
+                Failed Stage:
+                ${env.FAILED_STAGE}
+
+                Build URL:
+                ${env.BUILD_URL}
+                """,
+                to: "${NOTIFY_EMAIL}"
+            )
+        }
+
+        always {
+            cleanWs()
+        }
+    }
+}

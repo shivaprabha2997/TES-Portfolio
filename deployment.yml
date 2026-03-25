@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: agrdeploy
+  name: dreamhouse 
   labels:
     app: agrapp
 spec:
@@ -15,8 +15,8 @@ spec:
         app: agrapp
     spec:
       containers:
-        - name: agrcontainer
-          image: surya8442/agriculture:latest
+        - name: dreamcontainer
+          image: surya8442/dreamhouse:latest
           ports:
             - containerPort: 8080
 
@@ -32,5 +32,5 @@ spec:
   ports:
     - port: 80
       targetPort: 8080
-      nodePort: 30458
+      nodePort: 30488
       

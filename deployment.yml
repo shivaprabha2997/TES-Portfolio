@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: tescontainer
-          image: shivadocker2997/tesportfolio:
+          image: shivadocker2997/tesportfolio:TES
           ports:
             - containerPort: 8080
 

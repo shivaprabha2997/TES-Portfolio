@@ -3,128 +3,263 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DreamHouse Pro</title>
-
-  <!-- Bootstrap -->
+  <title>TES - DevOps & AWS Portfolio</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
-    body { background:#f5f7fa; }
-    .hero { background:url('https://source.unsplash.com/1600x600/?luxury-house') center/cover no-repeat; height:70vh; color:white; display:flex; align-items:center; justify-content:center; text-align:center; }
-    .hero h1 { font-size:3.5rem; font-weight:bold; }
-    .card img { height:200px; object-fit:cover; }
-    .section-title { font-weight:bold; margin:40px 0 20px; }
-    footer { background:#222; color:#fff; padding:20px; text-align:center; }
+    body { font-family: Arial, sans-serif; scroll-behavior: smooth; }
+
+    /* HERO SECTION (UPDATED BIG DEVOPS BG) */
+    .hero {
+      background: url('https://miro.medium.com/v2/resize:fit:1400/1*9p6Q7cZ4z6t0Z0l3z1z9gQ.png') center/cover no-repeat;
+      position: relative;
+      color: white;
+      padding: 140px 0;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    /* DARK + GLASS OVERLAY */
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, rgba(0,0,0,0.85), rgba(13,110,253,0.6));
+      backdrop-filter: blur(3px);
+    }
+
+    /* DEVOPS INFINITY IMAGE */
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: url('https://cdn-icons-png.flaticon.com/512/906/906324.png') center/contain no-repeat;
+      opacity: 0.08;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(10deg);
+    }
+
+    /* Meditation Icon */
+    .meditation {
+      position: absolute;
+      bottom: 20px;
+      right: 30px;
+      font-size: 120px;
+      color: rgba(255,255,255,0.2);
+      text-shadow: 0 0 40px rgba(0,123,255,0.6);
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-15px); }
+      100% { transform: translateY(0px); }
+    }
+
+    .hero .container { position: relative; z-index: 2; }
+
+    .section { padding: 70px 0; }
+
+    /* ABOUT BG */
+    #about {
+      background: url('https://images.unsplash.com/photo-1558494949-ef010cbdcc31') center/cover no-repeat;
+      color: white;
+      position: relative;
+    }
+
+    #about::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75);
+    }
+
+    #about .container { position: relative; z-index: 2; }
+
+    .footer { background: #111; color: white; text-align: center; padding: 20px; }
+
+    /* CARDS */
+    .card {
+      transition: all 0.4s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .card:hover {
+      transform: translateY(-10px) scale(1.03);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    /* ANIMATION */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: all 0.8s ease-in-out;
+    }
+
+    .fade-in.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* NOTE */
+    .note {
+      background: #ffc107;
+      color: #000;
+      padding: 15px;
+      border-radius: 10px;
+      font-weight: bold;
+      margin-top: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
   </style>
 </head>
+
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
   <div class="container">
-    <a class="navbar-brand" href="#">DreamHouse Pro</a>
-    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
+    <a class="navbar-brand" href="#">TES Institute</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="nav">
       <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Buy</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Sell</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+        <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+        <li class="nav-item"><a class="nav-link" href="#courses">Courses</a></li>
+        <li class="nav-item"><a class="nav-link" href="#projects">Projects</a></li>
+        <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
       </ul>
     </div>
   </div>
 </nav>
 
-<!-- Hero -->
-<section class="hero">
-  <div>
-    <h1>Find Your Dream Home</h1>
-    <p>Over 1000+ premium listings worldwide</p>
-    <button class="btn btn-primary btn-lg">Explore Now</button>
+<!-- HERO -->
+<section id="home" class="hero">
+  <div class="container fade-in">
+    <h1 class="display-4">TES - Tech Export Solutions</h1>
+    <h3>DEVOPS ∞ AWS Training Institute</h3>
+    <p>Professor: JANA</p>
+    <button class="btn btn-warning mt-3" onclick="scrollToSection('contact')">Enroll Now</button>
+  </div>
+  <div class="meditation">🧘</div>
+</section>
+
+<!-- ABOUT -->
+<section id="about" class="section text-center">
+  <div class="container fade-in">
+    <h2>About Us</h2>
+    <p>
+      TES is a specialized DevOps & AWS training institute providing real-time industry training,
+      hands-on labs, and live projects guided by expert mentor Professor JANA.
+    </p>
+    <p>
+      We transform experienced professionals into industry-ready DevOps engineers.
+    </p>
+
+    <div class="note">
+      THIS IS THE LAST CHANCE TO TRANSFORM YOUR CAREER – ONLY FOR SERIOUS & EXPERIENCED CANDIDATES
+    </div>
   </div>
 </section>
 
-<!-- Search -->
-<div class="container mt-4">
-  <div class="row g-3">
-    <div class="col-md-3"><input class="form-control" placeholder="Location"></div>
-    <div class="col-md-3"><input class="form-control" placeholder="Min Price"></div>
-    <div class="col-md-3"><input class="form-control" placeholder="Max Price"></div>
-    <div class="col-md-3"><button class="btn btn-success w-100">Search</button></div>
-  </div>
-</div>
-
-<!-- Listings -->
-<div class="container">
-  <h2 class="section-title">Featured Properties</h2>
-  <div class="row" id="propertyContainer"></div>
-</div>
-
-<!-- Footer -->
-<footer>
-  <p>© 2026 DreamHouse Pro | All Rights Reserved</p>
-</footer>
-
-<!-- JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-const container = document.getElementById("propertyContainer");
-
-const images = [
-  "https://picsum.photos/id/1018/400/300",
-  "https://picsum.photos/id/1015/400/300",
-  "https://picsum.photos/id/1019/400/300",
-  "https://picsum.photos/id/1020/400/300",
-  "https://picsum.photos/id/1024/400/300",
-  "https://picsum.photos/id/1025/400/300",
-  "https://picsum.photos/id/1031/400/300",
-  "https://picsum.photos/id/1035/400/300",
-  "https://picsum.photos/id/1038/400/300",
-  "https://picsum.photos/id/1043/400/300",
-  "https://picsum.photos/id/1050/400/300",
-  "https://picsum.photos/id/1057/400/300",
-  "https://picsum.photos/id/1060/400/300",
-  "https://picsum.photos/id/1067/400/300",
-  "https://picsum.photos/id/1070/400/300",
-  "https://picsum.photos/id/1080/400/300",
-  "https://picsum.photos/id/1084/400/300",
-  "https://picsum.photos/id/1081/400/300",
-  "https://picsum.photos/id/1082/400/300",
-  "https://picsum.photos/id/1083/400/300",
-  "https://picsum.photos/id/1085/400/300",
-  "https://picsum.photos/id/1089/400/300",
-  "https://picsum.photos/id/109/400/300",
-  "https://picsum.photos/id/110/400/300",
-  "https://picsum.photos/id/111/400/300",
-  "https://picsum.photos/id/112/400/300",
-  "https://picsum.photos/id/113/400/300",
-  "https://picsum.photos/id/114/400/300",
-  "https://picsum.photos/id/115/400/300",
-  "https://picsum.photos/id/116/400/300"
-];
-
-images.forEach((type, index) => {
-  const card = `
-  <div class="col-md-4 mb-4">
-    <div class="card shadow">
-      <img src="${images[index]}" class="card-img-top">
-      <div class="card-body">
-        <h5 class="card-title">Property ${index + 1}</h5>
-        <p class="card-text">Price: $${(index+1)*10000} | 3 Beds | 2 Baths</p>
-        <button class="btn btn-primary" onclick="viewDetails(${index})">View Details</button>
+<!-- COURSES -->
+<section id="courses" class="section bg-light text-center">
+  <div class="container">
+    <h2 class="fade-in">Courses</h2>
+    <div class="row mt-4">
+      <div class="col-md-4 fade-in">
+        <div class="card p-3">
+          <h4>DevOps</h4>
+          <p>CI/CD, Docker, Kubernetes, Jenkins, Git, Terraform.</p>
+        </div>
+      </div>
+      <div class="col-md-4 fade-in">
+        <div class="card p-3">
+          <h4>AWS</h4>
+          <p>EC2, S3, IAM, RDS, VPC, CloudFormation.</p>
+        </div>
+      </div>
+      <div class="col-md-4 fade-in">
+        <div class="card p-3">
+          <h4>Real-Time Projects</h4>
+          <p>Hands-on deployment with real industry scenarios.</p>
+        </div>
       </div>
     </div>
-  </div>`;
-  container.innerHTML += card;
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects" class="section text-center">
+  <div class="container">
+    <h2 class="fade-in">Projects</h2>
+    <div class="row mt-4">
+      <div class="col-md-4 fade-in">
+        <div class="card p-3">
+          <h5>CI/CD Pipeline</h5>
+          <p>Automated deployment using Jenkins & GitHub.</p>
+        </div>
+      </div>
+      <div class="col-md-4 fade-in">
+        <div class="card p-3">
+          <h5>Kubernetes</h5>
+          <p>Container orchestration using Docker & K8s.</p>
+        </div>
+      </div>
+      <div class="col-md-4 fade-in">
+        <div class="card p-3">
+          <h5>AWS Infra</h5>
+          <p>Scalable cloud setup using AWS services.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="section bg-light">
+  <div class="container text-center fade-in">
+    <h2>Contact</h2>
+    <form onsubmit="submitForm(event)" class="mt-4">
+      <input type="text" class="form-control mb-3" placeholder="Name" required>
+      <input type="email" class="form-control mb-3" placeholder="Email" required>
+      <textarea class="form-control mb-3" rows="4" placeholder="Message" required></textarea>
+      <button class="btn btn-primary">Send</button>
+    </form>
+    <p id="msg" class="text-success mt-3"></p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p>© 2026 TES Institute | DevOps & AWS</p>
+</footer>
+
+<script>
+function scrollToSection(id) {
+  document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+}
+
+function submitForm(e) {
+  e.preventDefault();
+  document.getElementById('msg').innerText = "Message sent successfully!";
+}
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('show');
+    }
+  });
 });
 
-function viewDetails(id) {
-  alert("Viewing details for Property " + (id+1));
-}
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

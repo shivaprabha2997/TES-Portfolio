@@ -3,27 +3,27 @@ pipeline {
 
     environment {
 
-        // Docker
-        DOCKER_USER = "surya8442"
-        IMAGE_NAME = "dreamhouse"
-        IMAGE_TAG = "latest"
+        
+        DOCKER_USER = "shivadocker2997"
+        IMAGE_NAME = "tesportfolio"
+        IMAGE_TAG = "TES"
 
-        // Git
-        GIT_REPO = "https://github.com/Surya8442/Dreamhouse.git"
+        
+        GIT_REPO = "https://github.com/shivaprabha2997/TES-Portfolio.git"
         GIT_BRANCH = "main"
 
         // Docker Credentials
-        DOCKER_CREDS = "Docker_cred"
+        DOCKER_CREDS = "Docker_CRED"
 
         // AWS EKS
-        AWS_REGION = "ap-south-1"
-        EKS_CLUSTER = "mycluster"
+        AWS_REGION = "us-east-1"
+        EKS_CLUSTER = "clustertes"
 
         // Kubernetes
         KUBECONFIG_PATH = "/var/lib/jenkins/.kube/config"
 
         // Email
-        NOTIFY_EMAIL = "suryakandipalli@gmail.com"
+        NOTIFY_EMAIL = "sivaprabha997@gmail.com"
     }
 
     stages {
@@ -74,7 +74,7 @@ pipeline {
                 sh """
                 export KUBECONFIG=${KUBECONFIG_PATH}
                 kubectl apply -f deployment.yml
-                kubectl rollout status deployment dreamhouse
+                kubectl rollout status deployment deploytes
                 """
             }
         }
@@ -89,7 +89,7 @@ pipeline {
                 body: """
 Deployment Successful
 
-Project: Dreamhouse
+Project: TES-JANA
 
 Docker Image:
 ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}

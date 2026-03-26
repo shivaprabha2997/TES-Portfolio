@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: tescontainer
-          image: surya8442/dreamhouse:latest
+          image: shivadocker2997/:latest
           ports:
             - containerPort: 8080
 

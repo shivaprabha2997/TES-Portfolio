@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: tescontainer
-          image: shivadocker2997/:latest
+          image: shivadocker2997/tesportfolio:
           ports:
             - containerPort: 8080
 
@@ -24,13 +24,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: agr-service
+  name: tes-service
 spec:
   type: NodePort
   selector:
-    app: agrapp
+    app: tes
   ports:
     - port: 80
       targetPort: 8080
-      nodePort: 30488
+      nodePort: 32323
       

@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dreamhouse 
+  name: deploytes 
   labels:
-    app: agrapp
+    app: tes
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: agrapp
+      app: tes
   template:
     metadata:
       labels:
-        app: agrapp
+        app: tes
     spec:
       containers:
-        - name: dreamcontainer
+        - name: tescontainer
           image: surya8442/dreamhouse:latest
           ports:
             - containerPort: 8080

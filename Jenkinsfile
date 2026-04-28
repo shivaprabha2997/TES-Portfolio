@@ -141,61 +141,120 @@ pipeline {
             }
         }
 
-        stage('Configure AWS EKS') {
+        stage('Install Helm') {
             steps {
-                sh """
-                aws eks --region ${AWS_REGION} update-kubeconfig --name ${EKS_CLUSTER}
-                export KUBECONFIG=${KUBECONFIG_PATH}
-                kubectl get nodes
-                """
+                sh '''
+                curl -LO https://get.helm.sh/helm-v3.14.0-linux-amd64.tar.gz
+                tar -zxvf helm-v3.14.0-linux-amd64.tar.gz
+                mv linux-amd64/helm ./helm
+                chmod +x ./helm
+                '''
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Setup Kubeconfig') {
             steps {
-                sh """
-                export KUBECONFIG=${KUBECONFIG_PATH}
+                sh '''
+                aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER
+                kubectl get nodes
+                '''
+            }
+        }
+
+        stage('Deploy Monitoring (Prometheus + Grafana)') {
+            steps {
+                sh '''
+                ./helm repo add prometheus-community https://prometheus-community.github.io/helm-charts || true
+                ./helm repo update
+
+                ./helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
+                --namespace monitoring --create-namespace \
+                --set grafana.service.type=LoadBalancer
+                '''
+            }
+        }
+
+        stage('Get Grafana Password') {
+            steps {
+                sh '''
+                echo "Grafana Admin Password:"
+                kubectl get secret monitoring-grafana \
+                -n monitoring \
+                -o jsonpath="{.data.admin-password}" | base64 --decode
+                echo ""
+                '''
+            }
+        }
+
+        stage('Deploy Application to EKS') {
+            steps {
+                sh '''
                 kubectl apply -f deployment.yml
-                kubectl rollout status deployment deploytes
-                kubectl get pods -l app=tes
-                kubectl get svc  tes-service
-                """
+                kubectl apply -f service.yml
+                '''
+            }
+        }
+
+        stage('Wait for LoadBalancer') {
+            steps {
+                sh '''
+                echo "Waiting for LoadBalancer to be ready..."
+                sleep 60
+                '''
+            }
+        }
+
+        stage('Get Application URL') {
+            steps {
+                script {
+                    def url = sh(
+                        script: '''
+                        kubectl get svc zomatosvc \
+                        -o jsonpath="{.status.loadBalancer.ingress[0].hostname}{.status.loadBalancer.ingress[0].ip}"
+                        ''',
+                        returnStdout: true
+                    ).trim()
+
+                    env.APP_URL = url
+                    echo "Application URL: ${env.APP_URL}"
+                }
             }
         }
     }
 
     post {
+
         success {
             emailext(
-                to: "sivaprabha997@gmail.com",
-                subject: "SUCCESS: TES Portfolio Build #${env.BUILD_NUMBER}",
+                subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
-Build Successful
+Build SUCCESS 🎉
 
-Project  : TES Portfolio
-Build #  : ${env.BUILD_NUMBER}
-Branch   : main
-Image    : shivadocker2997/tesportfolio:TES
-Cluster  : clustertes (us-east-1)
+Application URL:
+http://${env.APP_URL}
 
-Build URL: ${env.BUILD_URL}
-"""
+Jenkins URL:
+${env.BUILD_URL}
+""",
+                to: "${RECIPIENTS}"
             )
         }
+
         failure {
             emailext(
-                to: "sivaprabha997@gmail.com",
-                subject: "FAILED: TES Portfolio Build #${env.BUILD_NUMBER}",
+                subject: "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
-Pipeline Failed
+Build FAILED ❌
 
-Check Logs: ${env.BUILD_URL}console
-"""
+Check logs:
+${env.BUILD_URL}
+""",
+                to: "${RECIPIENTS}"
             )
         }
+
         always {
-            sh 'docker image prune -f || true'
-            cleanWs()
+            archiveArtifacts artifacts: 'zomato-build.zip', fingerprint: true
         }
     }
 }

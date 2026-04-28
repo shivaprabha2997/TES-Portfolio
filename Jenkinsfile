@@ -84,34 +84,23 @@ pipeline {
         }
 
         stage('Package & Publish to Nexus') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'nexus-credentials',
-                    usernameVariable: 'NEXUS_USER',
-                    passwordVariable: 'NEXUS_PASS'
-                )]) {
-                    sh '''
-                    VERSION=$(node -p "require('./package.json').version")
-                    ARTIFACT="tes-portfolio-${VERSION}.zip"
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'nexus-creds',
+            usernameVariable: 'NEXUS_USER',
+            passwordVariable: 'NEXUS_PASS'
+        )]) {
 
-                    echo "=== Creating artifact: ${ARTIFACT} ==="
-                    zip -r "$ARTIFACT" . \
-                        --exclude "node_modules/*" \
-                        --exclude ".git/*" \
-                        --exclude "dist/*" \
-                        --exclude "coverage/*"
+            sh '''
+            zip -r tes-portfolio.zip .
 
-                    echo "=== Uploading to Nexus ==="
-                    curl -u "$NEXUS_USER:$NEXUS_PASS" \
-                         --upload-file "$ARTIFACT" \
-                         "${NEXUS_REPO}${ARTIFACT}"
-
-                    echo "Artifact ${ARTIFACT} uploaded to Nexus successfully"
-                    '''
-                }
-            }
+            curl -v -u $NEXUS_USER:$NEXUS_PASS \
+            --upload-file tes-portfolio.zip \
+            http://<NEXUS-IP>:8081/repository/tes-portfolio/tes-portfolio.zip
+            '''
         }
-
+    }
+}
         stage('Fix Docker Permission') {
             steps {
                 sh 'sudo chmod 777 /var/run/docker.sock || true'

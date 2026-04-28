@@ -248,7 +248,7 @@ pipeline {
                 echo "Waiting for LoadBalancer..."
 
                 kubectl wait \
-                --for=condition=available deployment/tes-deployment \
+                --for=condition=available deployment/deploytes \
                 --timeout=300s
 
                 sleep 180

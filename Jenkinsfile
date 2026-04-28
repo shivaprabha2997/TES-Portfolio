@@ -12,7 +12,7 @@ pipeline {
 
         NEXUS_REPO      = "http://98.92.203.81:8081/repository/raw-repo/"
         AWS_REGION      = "us-east-1"
-        EKS_CLUSTER     = "mycluster1"
+        CLUSTER_NAME     = "mycluster1"
 
         RECIPIENTS      = "sivaprabha997@gmail.com"
     }

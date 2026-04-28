@@ -12,7 +12,7 @@ pipeline {
         NEXUS_REPO         = "http://98.92.203.81:8081//repository/raw-repo/"
         KUBECONFIG_PATH    = "/var/lib/jenkins/.kube/config"
         AWS_REGION         = "us-east-1"
-        EKS_CLUSTER        = "clustertes"
+        EKS_CLUSTER        = "mycluster1"
     }
 
     stages {

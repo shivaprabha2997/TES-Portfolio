@@ -91,13 +91,13 @@ pipeline {
             passwordVariable: 'NEXUS_PASS'
         )]) {
 
-            sh '''
+            sh """
             zip -r tes-portfolio.zip .
 
             curl -v -u $NEXUS_USER:$NEXUS_PASS \
             --upload-file tes-portfolio.zip \
-            http://98.92.203.81:8081/repository/tes-portfolio/tes-portfolio.zip
-            '''
+            ${NEXUS_REPO}tes-portfolio.zip
+            """
         }
     }
 }

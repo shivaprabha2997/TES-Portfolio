@@ -228,7 +228,7 @@ pipeline {
                 echo ""
                 '''
             }
-        }
+        } 
 
         stage('Deploy Application to EKS') {
             steps {
@@ -254,7 +254,8 @@ pipeline {
                 sleep 180
                 '''
             }
-        }
+        } 
+        
 
         stage('Get Application URL') {
             steps {
@@ -277,47 +278,135 @@ pipeline {
         }
     }
 
+   stage('Expose Grafana') {
+            steps {
+                sh '''
+                echo "Waiting for Grafana..."
+                sleep 30
+
+                kubectl patch svc monitoring-grafana \
+                -n monitoring \
+                -p '{"spec": {"type": "LoadBalancer"}}'
+                '''
+            }
+        }
+
+        stage('Expose Prometheus') {
+            steps {
+                sh '''
+                kubectl patch svc monitoring-kube-prometheus-prometheus \
+                -n monitoring \
+                -p '{"spec": {"type": "LoadBalancer"}}'
+                '''
+            }
+        }
+    }
+
+    // ===========================
     post {
 
         success {
+            script {
 
-            emailext(
-                subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                sleep 40
 
-                body: """
-Build SUCCESS
+                def APP_URL = ""
+                def GRAFANA_URL = ""
+                def PROM_URL = ""
 
-Application URL:
-http://${env.APP_URL}
+                for (int i = 0; i < 5; i++) {
 
-Jenkins URL:
-${env.BUILD_URL}
-""",
+                    APP_URL = sh(
+                        script: "kubectl get svc puzzle-game-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' || true",
+                        returnStdout: true
+                    ).trim()
 
-                to: "${RECIPIENTS}"
-            )
+                    GRAFANA_URL = sh(
+                        script: "kubectl get svc monitoring-grafana -n monitoring -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' || true",
+                        returnStdout: true
+                    ).trim()
+
+                    PROM_URL = sh(
+                        script: "kubectl get svc monitoring-kube-prometheus-prometheus -n monitoring -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' || true",
+                        returnStdout: true
+                    ).trim()
+
+                    if (APP_URL && GRAFANA_URL && PROM_URL) {
+                        break
+                    }
+
+                    sleep 20
+                }
+
+                def DOCKER_IMAGE = "${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
+
+                emailext(
+                    subject: "🚀 Deployment Successful - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    mimeType: 'text/html',
+                    body: """
+                    <html>
+                    <body style="font-family: Arial;">
+
+                    <h2 style="color:green;">🎉 Deployment Successful</h2>
+
+                    <h3>📌 Project Details</h3>
+                    <ul>
+                        <li><b>Project:</b> ${PROJECT_NAME}</li>
+                        <li><b>Cluster:</b> ${CLUSTER_NAME}</li>
+                    </ul>
+
+                    <h3>🐳 Docker Image</h3>
+                    <p>${DOCKER_IMAGE}</p>
+
+                    <h3>🌐 Application</h3>
+                    <a href="http://${APP_URL}">Open Application</a>
+
+                    <h3>📊 Grafana</h3>
+                    <a href="http://${GRAFANA_URL}">Open Grafana</a>
+
+                    <h3>🔥 Prometheus</h3>
+                    <a href="http://${PROM_URL}:9090">Open Prometheus</a>
+
+                    <h3>🛠 Jenkins</h3>
+                    <ul>
+                        <li>Job: ${env.JOB_NAME}</li>
+                        <li>Build: ${env.BUILD_NUMBER}</li>
+                        <li><a href="${env.BUILD_URL}">Open Build</a></li>
+                    </ul>
+
+                    </body>
+                    </html>
+                    """,
+                    to: "${env.RECIPIENTS}"
+                )
+            }
         }
 
         failure {
-
             emailext(
-                subject: "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-
+                subject: "❌ Deployment Failed - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                mimeType: 'text/html',
                 body: """
-Build FAILED
+                <html>
+                <body style="font-family: Arial;">
 
-Check Logs:
-${env.BUILD_URL}
-""",
+                <h2 style="color:red;">❌ Deployment Failed</h2>
 
-                to: "${RECIPIENTS}"
+                <p><b>Project:</b> Sliding Puzzle Game</p>
+                <p><b>Cluster:</b> mycluster</p>
+
+                <h3>🔍 Logs</h3>
+                <a href="${env.BUILD_URL}">View Build Logs</a>
+
+                </body>
+                </html>
+                """,
+                to: "${env.RECIPIENTS}"
             )
         }
 
         always {
-
-            archiveArtifacts artifacts: 'tes-portfolio.zip',
-            fingerprint: true
+            archiveArtifacts artifacts: 'tes-portfolio.zip', fingerprint: true, allowEmptyArchive: true
         }
     }
 }

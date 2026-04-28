@@ -1,61 +1,154 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs 'NodeJS-18'
+    }
+
     environment {
-
-        
-        DOCKER_USER = "shivadocker2997"
-        IMAGE_NAME = "tesportfolio"
-        IMAGE_TAG = "TES"
-
-        
-        GIT_REPO = "https://github.com/shivaprabha2997/TES-Portfolio.git"
-        GIT_BRANCH = "main"
-
-        // Docker Credentials
-        DOCKER_CREDS = "Docker_CRED"
-
-        // AWS EKS
-        AWS_REGION = "us-east-1"
-        EKS_CLUSTER = "clustertes"
-
-        // Kubernetes
-        KUBECONFIG_PATH = "/var/lib/jenkins/.kube/config"
-
-        // Email
-        NOTIFY_EMAIL = "sivaprabha997@gmail.com"
+        DOCKER_IMAGE       = "shivadocker2997/tesportfolio:TES"
+        DOCKER_CREDENTIALS = "Docker_cred"
+        SONARQUBE_ENV      = "sonar_cred"
+        NEXUS_REPO         = "http://98.92.203.81:8081//repository/raw-repo/"
+        KUBECONFIG_PATH    = "/var/lib/jenkins/.kube/config"
+        AWS_REGION         = "us-east-1"
+        EKS_CLUSTER        = "clustertes"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                git branch: "${GIT_BRANCH}", url: "${GIT_REPO}"
+                git branch: 'main', url: 'https://github.com/shivaprabha2997/TES-Portfolio.git'
             }
         }
 
-        stage('Build Image') {
+        stage('Install Dependencies') {
             steps {
-                sh """
-                docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
-                """
+                sh '''
+                if [ -f package.json ]; then
+                    npm install
+                else
+                    echo "No package.json found, skipping install"
+                fi
+                '''
             }
         }
 
-        stage('Push to DockerHub') {
+        stage('Build Project') {
+            steps {
+                sh '''
+                if npm run | grep -q "build"; then
+                    npm run build
+                else
+                    echo "No build script found, skipping"
+                fi
+                '''
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh '''
+                if npm run | grep -q "test"; then
+                    npm test
+                else
+                    echo "No test script found, skipping"
+                fi
+                '''
+            }
+            post {
+                always  { echo "Test stage completed" }
+                failure { echo "Tests failed! Check the logs above." }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv("${SONARQUBE_ENV}") {
+                    sh "${tool 'sonar-scanner'}/bin/sonar-scanner \
+                       -Dsonar.projectKey=tes-portfolio \
+                       -Dsonar.projectName=TES-Portfolio \
+                       -Dsonar.sources=. \
+                       -Dsonar.exclusions=node_modules/**,dist/**,coverage/**"
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 10, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage('Package & Publish to Nexus') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: "${DOCKER_CREDS}",
-                    usernameVariable: 'USER',
-                    passwordVariable: 'PASS'
+                    credentialsId: 'nexus-credentials',
+                    usernameVariable: 'NEXUS_USER',
+                    passwordVariable: 'NEXUS_PASS'
                 )]) {
+                    sh '''
+                    VERSION=$(node -p "require('./package.json').version")
+                    ARTIFACT="tes-portfolio-${VERSION}.zip"
 
-                    sh """
-                    echo "$PASS" | docker login -u "$USER" --password-stdin
-                    docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}
-                    docker push ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}
-                    """
+                    echo "=== Creating artifact: ${ARTIFACT} ==="
+                    zip -r "$ARTIFACT" . \
+                        --exclude "node_modules/*" \
+                        --exclude ".git/*" \
+                        --exclude "dist/*" \
+                        --exclude "coverage/*"
+
+                    echo "=== Uploading to Nexus ==="
+                    curl -u "$NEXUS_USER:$NEXUS_PASS" \
+                         --upload-file "$ARTIFACT" \
+                         "${NEXUS_REPO}${ARTIFACT}"
+
+                    echo "Artifact ${ARTIFACT} uploaded to Nexus successfully"
+                    '''
                 }
+            }
+        }
+
+        stage('Fix Docker Permission') {
+            steps {
+                sh 'sudo chmod 777 /var/run/docker.sock || true'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t ${DOCKER_IMAGE} ."
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: "${DOCKER_CREDENTIALS}",
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    docker push shivadocker2997/tesportfolio:TES
+                    docker logout
+                    '''
+                }
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                sh '''
+                docker stop tescontainer || true
+                docker rm   tescontainer || true
+
+                docker run -itd --name tescontainer -p 8090:8080 shivadocker2997/tesportfolio:TES
+                echo "Container running at http://<your-server-ip>:8090"
+                '''
             }
         }
 
@@ -75,48 +168,44 @@ pipeline {
                 export KUBECONFIG=${KUBECONFIG_PATH}
                 kubectl apply -f deployment.yml
                 kubectl rollout status deployment deploytes
+                kubectl get pods -l app=tes
+                kubectl get svc  tes-service
                 """
             }
         }
     }
 
     post {
-
         success {
             emailext(
-                to: "${NOTIFY_EMAIL}",
-                subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                to: "sivaprabha997@gmail.com",
+                subject: "SUCCESS: TES Portfolio Build #${env.BUILD_NUMBER}",
                 body: """
-Deployment Successful
+Build Successful
 
-Project: TES-JANA
+Project  : TES Portfolio
+Build #  : ${env.BUILD_NUMBER}
+Branch   : main
+Image    : shivadocker2997/tesportfolio:TES
+Cluster  : clustertes (us-east-1)
 
-Docker Image:
-${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}
-
-Cluster:
-${EKS_CLUSTER}
-
-Build URL:
-${env.BUILD_URL}
+Build URL: ${env.BUILD_URL}
 """
             )
         }
-
         failure {
             emailext(
-                to: "${NOTIFY_EMAIL}",
-                subject: "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                to: "sivaprabha997@gmail.com",
+                subject: "FAILED: TES Portfolio Build #${env.BUILD_NUMBER}",
                 body: """
 Pipeline Failed
 
-Check Logs:
-${env.BUILD_URL}
+Check Logs: ${env.BUILD_URL}console
 """
             )
         }
-
         always {
+            sh 'docker image prune -f || true'
             cleanWs()
         }
     }

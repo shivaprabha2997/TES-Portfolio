@@ -8,7 +8,7 @@ pipeline {
     environment {
         DOCKER_IMAGE       = "shivadocker2997/tesportfolio:TES"
         DOCKER_CREDENTIALS = "Docker_cred"
-        SONARQUBE_ENV      = "sonar_cred"
+        SONARQUBE_ENV      = "sonar_scanner"
         NEXUS_REPO         = "http://98.92.203.81:8081//repository/raw-repo/"
         KUBECONFIG_PATH    = "/var/lib/jenkins/.kube/config"
         AWS_REGION         = "us-east-1"

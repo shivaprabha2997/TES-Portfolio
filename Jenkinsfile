@@ -209,7 +209,7 @@ pipeline {
                 script {
                     def url = sh(
                         script: '''
-                        kubectl get svc TES-portfolio \
+                        kubectl get svc tes-portfolio \
                         -o jsonpath="{.status.loadBalancer.ingress[0].hostname}{.status.loadBalancer.ingress[0].ip}"
                         ''',
                         returnStdout: true

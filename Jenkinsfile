@@ -190,25 +190,13 @@ pipeline {
 
         stage('Setup Kubeconfig') {
             steps {
-
-                withCredentials([
-                    [
-                        $class: 'AmazonWebServicesCredentialsBinding',
-                        credentialsId: 'aws-cred'
-                    ]
-                ]) {
-
-                    sh '''
-                    aws eks update-kubeconfig \
-                    --region $AWS_REGION \
-                    --name $EKS_CLUSTER
-
-                    kubectl get nodes
-                    '''
-                }
+                sh '''
+                aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+                kubectl get nodes
+                '''
             }
         }
-
+        
         stage('Deploy Monitoring (Prometheus + Grafana)') {
             steps {
 

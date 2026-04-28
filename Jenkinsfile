@@ -255,7 +255,7 @@ ${env.BUILD_URL}
         }
 
         always {
-            archiveArtifacts artifacts: 'TES-build.zip', fingerprint: true
+            archiveArtifacts artifacts: 'tes-portfolio.zip', fingerprint: true
         }
     }
 }

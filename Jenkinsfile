@@ -9,7 +9,7 @@ pipeline {
         DOCKER_IMAGE       = "shivadocker2997/tesportfolio:TES"
         DOCKER_CREDENTIALS = "Docker_cred"
         SONARQUBE_ENV      = "sonar-scanner"
-        NEXUS_REPO         = "http://98.92.203.81:8081//repository/raw-repo/"
+        NEXUS_REPO         = "http://98.92.203.81:8081//repository/raw-repo"
         KUBECONFIG_PATH    = "/var/lib/jenkins/.kube/config"
         AWS_REGION         = "us-east-1"
         EKS_CLUSTER        = "mycluster1"
@@ -209,7 +209,7 @@ pipeline {
                 script {
                     def url = sh(
                         script: '''
-                        kubectl get svc zomatosvc \
+                        kubectl get svc TES-portfolio \
                         -o jsonpath="{.status.loadBalancer.ingress[0].hostname}{.status.loadBalancer.ingress[0].ip}"
                         ''',
                         returnStdout: true
@@ -254,7 +254,7 @@ ${env.BUILD_URL}
         }
 
         always {
-            archiveArtifacts artifacts: 'zomato-build.zip', fingerprint: true
+            archiveArtifacts artifacts: 'TES-build.zip', fingerprint: true
         }
     }
 }

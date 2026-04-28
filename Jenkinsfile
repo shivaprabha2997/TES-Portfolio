@@ -13,6 +13,7 @@ pipeline {
         KUBECONFIG_PATH    = "/var/lib/jenkins/.kube/config"
         AWS_REGION         = "us-east-1"
         EKS_CLUSTER        = "mycluster1"
+        RECIPIENTS = "sivaprabha997@gmail.com"
     }
 
     stages {

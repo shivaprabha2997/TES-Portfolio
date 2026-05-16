@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps Portfolio Preview - AWS Automation</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Framer Motion -->
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            950: '#030712',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-950 text-white min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { motion, AnimatePresence } = FramerMotion;
+
+        const Icon = ({ name, className }) => {
+            useEffect(() => {
+                lucide.createIcons();
+            }, []);
+            return <i data-lucide={name} className={className}></i>;
+        };
+
+        const DevOpsPortfolio = () => {
+            const [activeTab, setActiveTab] = useState('architecture');
+
+            return (
+                <div className="min-h-screen bg-gray-950 text-gray-200 font-sans selection:bg-blue-500/30 overflow-x-hidden">
+                    <div className="fixed inset-0 z-0 opacity-20 pointer-events-none bg-grid-pattern"></div>
+                    <div className="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/20 blur-[120px] pointer-events-none z-0"></div>
+                    <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-600/20 blur-[120px] pointer-events-none z-0"></div>
+
+                    <div className="relative z-10 max-w-6xl mx-auto px-4 py-16 sm:px-6 lg:px-8 text-center">
+                        <motion.header initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="mb-16">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 mb-6 text-sm font-medium">
+                                <Icon name="cloud" className="w-4 h-4" /> Cloud & DevOps Engineering
+                            </div>
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 tracking-tight">
+                                AWS Infrastructure <br className="hidden md:block" />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                                    Automation & Kubernetes
+                                </span>
+                            </h1>
+                            <p className="max-w-2xl mx-auto text-lg text-gray-400 mb-8 leading-relaxed">
+                                Professional implementation of AWS cloud infrastructure using Terraform and Kubernetes (EKS). High availability, scalability, and security by design.
+                            </p>
+                            <div className="flex flex-wrap justify-center gap-4">
+                                <a href="https://github.com/shivaprabha2997/TES-Portfolio" target="_blank" className="flex items-center gap-2 px-6 py-3 rounded-lg bg-gray-800 border border-gray-700 transition-all text-white font-medium hover:bg-gray-700">
+                                    <Icon name="github" className="w-5 h-5" /> View Repository
+                                </a>
+                                <button className="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 transition-all text-white font-medium shadow-lg shadow-blue-500/25">
+                                    <Icon name="external-link" className="w-5 h-5" /> Live Demo
+                                </button>
+                            </div>
+                        </motion.header>
+
+                        <div className="grid md:grid-cols-3 gap-8 mb-16">
+                            {[
+                                { title: "Terraform IaC", icon: "terminal", desc: "Automated AWS provisioning" },
+                                { title: "EKS Cluster", icon: "cloud", desc: "Managed Kubernetes service" },
+                                { title: "CI/CD Pipeline", icon: "git-branch", desc: "Full automation with Jenkins" }
+                            ].map((item, i) => (
+                                <motion.div key={i} whileHover={{ y: -5 }} className="p-8 rounded-2xl bg-gray-900/50 border border-gray-800 backdrop-blur-sm">
+                                    <div className="w-12 h-12 rounded-lg bg-gray-950 flex items-center justify-center mb-4 mx-auto border border-gray-800">
+                                        <Icon name={item.icon} className="text-blue-400" />
+                                    </div>
+                                    <h3 className="text-xl font-bold mb-2">{item.title}</h3>
+                                    <p className="text-sm text-gray-400">{item.desc}</p>
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        <footer className="mt-20 pt-8 border-t border-gray-900 text-gray-500 text-sm">
+                            <p>© 2026 Senior DevOps Portfolio</p>
+                        </footer>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<DevOpsPortfolio />);
+    </script>
+</body>
+</html>

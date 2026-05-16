@@ -1,4 +1,12 @@
 terraform {
+  # Uncomment the following to use S3 for remote state management
+  # backend "s3" {
+  #   bucket         = "tes-terraform-state"
+  #   key            = "prod/terraform.tfstate"
+  #   region         = "us-east-1"
+  #   dynamodb_table = "terraform-lock"
+  # }
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"

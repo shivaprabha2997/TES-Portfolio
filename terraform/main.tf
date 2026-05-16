@@ -31,18 +31,13 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "19.15.3"
   cluster_name    = "mycluster1"
-  cluster_version = "1.27"
+  cluster_version = "1.30"
+  cluster_endpoint_public_access = true
   vpc_id                         = module.vpc.vpc_id
   subnet_ids                     = module.vpc.private_subnets
   eks_managed_node_groups = {
-    main = { desired_size = 3, min_size = 1, max_size = 5, instance_types = ["t3.medium"] }
+    main = { desired_size = 3, min_size = 1, max_size = 5, instance_types = ["t3.micro"] }
   }
-}
-
-# CloudWatch Log Group for EKS
-resource "aws_cloudwatch_log_group" "eks" {
-  name              = "/aws/eks/mycluster1/cluster"
-  retention_in_days = 7
 }
 
 # ALB Security Group
@@ -88,19 +83,15 @@ resource "aws_lb_listener" "http" {
   protocol          = "HTTP"
 
   default_action {
-    type = "fixed-response"
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "TES Portfolio ALB Live"
-      status_code  = "200"
-    }
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.eks_nodes.arn
   }
 }
 
 # ALB Target Group for EKS Nodes
 resource "aws_lb_target_group" "eks_nodes" {
   name     = "eks-node-tg"
-  port     = 80
+  port     = 30080
   protocol = "HTTP"
   vpc_id   = module.vpc.vpc_id
 
@@ -109,4 +100,14 @@ resource "aws_lb_target_group" "eks_nodes" {
     healthy_threshold   = 2
     unhealthy_threshold = 10
   }
+}
+
+# Allow ALB to communicate with EKS Nodes on NodePort
+resource "aws_security_group_rule" "node_port_ingress" {
+  type                     = "ingress"
+  from_port                = 30080
+  to_port                  = 30080
+  protocol                 = "tcp"
+  security_group_id        = module.eks.node_security_group_id
+  source_security_group_id = aws_security_group.alb_sg.id
 }
